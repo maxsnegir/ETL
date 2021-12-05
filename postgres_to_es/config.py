@@ -1,5 +1,10 @@
 import os
+import logging
+
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
 load_dotenv()
 
@@ -11,7 +16,7 @@ db_dsl = {
     'port': os.environ.get('DB_PORT'),
 }
 
-es_dsl = {
+es_dsl = [{
     'host': os.environ.get('ELASTIC_HOST'),
     'port': os.environ.get('ELASTIC_PORT')
-}
+}]

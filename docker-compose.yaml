@@ -11,18 +11,6 @@ services:
       - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
     expose:
       - 5432
-    ports:
-      - "5432:5432"
-
-  es:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
 
   web:
     build: .
@@ -32,6 +20,18 @@ services:
       - .env
     volumes:
       - static_volume:/admin_movies/movies_admin/static/
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    expose:
+      - 9200
+    depends_on:
+      - web
 
   nginx:
     image: nginx:1.19.2

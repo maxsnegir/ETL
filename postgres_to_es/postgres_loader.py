@@ -1,8 +1,10 @@
 from typing import List
-from postgres_to_es.state import State
+from state import State
 from sql_queries import FilmWorkQuery as FWQuery
 from psycopg2.extensions import connection as _connection, cursor as _cursor
 from schemas import FilmWork
+from helpers import backoff
+from config import logger
 
 
 class PostgresData:
@@ -25,6 +27,7 @@ class PostgresData:
             return main_query + FWQuery.END_QUERY_WITH_FILTER.format(self.state_key)
         return main_query + FWQuery.END_QUERY_BASE
 
+    @backoff()
     def get_data(self) -> List:
         """Метод получения данных из базы, пачками по 100 шт."""
 
@@ -45,5 +48,5 @@ class PostgresData:
             self.state_key = updated_at_value
             count_rows += len(rows)
 
-        print(f'Загружено {count_rows} записей')
+        logger.info(f'Загружено {count_rows} записей')
         return data
