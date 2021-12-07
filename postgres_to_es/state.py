@@ -35,6 +35,7 @@ class JsonFileStorage(BaseStorage):
 
         except FileNotFoundError:
             self.save_state({})
+            return {}
 
 
 class State:

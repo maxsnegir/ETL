@@ -4,22 +4,26 @@ from psycopg2.extras import DictCursor
 
 import config as conf
 from es import ElasticsearchLoader
-from postgres_loader import PostgresData
+from postgres_loader import BaseLoader, MovieLoader
+from sql_queries import PersonQuery, GenreQuery, FWBase
 from state import State, JsonFileStorage
 
 
-def main(pg_connection: _connection) -> None:
-    state = State(JsonFileStorage("PostgresStorages.json"))
-    db_data = PostgresData(pg_connection, state).get_data()  # Получаем данные из базы
+def etl(pg_connection: _connection) -> None:
 
-    es = ElasticsearchLoader(conf.es_dsl, 'movies', 'es_schema/index.json', state)
+    # Для себя описал схему в ETLSchema.png
+    state = State(JsonFileStorage("PostgresStorages.json"))
+    es = ElasticsearchLoader(conf.es_dsl, 'movies', 'es_schema/index.json')
     es.create_index()
-    es.load_es_data(db_data)  # Загружаем данные в Elasticsearch
+
+    BaseLoader(pg_connection, state, es, PersonQuery).load()  # Изменившиеся Персоны
+    BaseLoader(pg_connection, state, es, GenreQuery).load()  # Изменившиеся Жанры
+    MovieLoader(pg_connection, state, es, FWBase).load()  # Изменившиеся Фильмы
 
 
 if __name__ == '__main__':
     try:
         with psycopg2.connect(**conf.db_dsl, cursor_factory=DictCursor) as pg_conn:
-            main(pg_conn)
+            etl(pg_conn)
     finally:
         pg_conn.close()
